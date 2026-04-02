@@ -49,12 +49,15 @@ class DataIOManager:
         logger.info(f"Dataset '{dataset_id}' salvo com sucesso em: {output_file}")
 
     def _read_json(self, path: str) -> pd.DataFrame:
-        """Lê um arquivo JSON lines."""
+        """Lê um arquivo JSON lines (suporta .gz)."""
         if not os.path.exists(path):
             raise DataIOError(f"Arquivo JSON não encontrado: {path}")
 
         try:
-            return pd.read_json(path, lines=True, encoding="utf-8")
+            compression = "gzip" if path.endswith(".gz") else None
+            return pd.read_json(
+                path, lines=True, encoding="utf-8", compression=compression
+            )
         except Exception as e:
             raise DataIOError(f"Erro ao ler JSON '{path}': {e}")
 
@@ -69,7 +72,10 @@ class DataIOManager:
         if not os.path.isdir(path):
             raise DataIOError(f"Caminho CSV não encontrado: {path}")
 
-        csv_files = sorted(glob.glob(os.path.join(path, "*.csv")))
+        csv_files = sorted(
+            glob.glob(os.path.join(path, "*.csv"))
+            + glob.glob(os.path.join(path, "*.csv.gz"))
+        )
         if not csv_files:
             raise DataIOError(f"Nenhum arquivo CSV encontrado em: {path}")
 
@@ -78,7 +84,13 @@ class DataIOManager:
         frames = []
         for csv_file in csv_files:
             try:
-                df = pd.read_csv(csv_file, sep=separator, encoding="utf-8")
+                compression = "gzip" if csv_file.endswith(".gz") else None
+                df = pd.read_csv(
+                    csv_file,
+                    sep=separator,
+                    encoding="utf-8",
+                    compression=compression,
+                )
                 frames.append(df)
             except Exception as e:
                 raise DataIOError(f"Erro ao ler CSV '{csv_file}': {e}")
