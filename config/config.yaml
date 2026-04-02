@@ -1,0 +1,15 @@
+datasets:
+  clientes:
+    type: json
+    path: data/input/dataset-json-clientes/data/clientes.json
+  pedidos:
+    type: csv
+    path: data/input/datasets-csv-pedidos/data/pedidos
+    separator: ";"
+  top_10_clientes:
+    type: csv
+    path: data/output/top_10_clientes
+    separator: ";"
+
+pipeline:
+  top_n: 10
