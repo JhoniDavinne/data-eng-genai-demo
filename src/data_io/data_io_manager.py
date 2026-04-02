@@ -2,6 +2,8 @@
 
 import csv
 import glob
+import gzip
+import io
 import json
 import logging
 import os
@@ -51,14 +53,28 @@ class DataIOManager:
 
         self._write_csv(resolved_path, data, separator)
 
+    def _resolve_json_path(self, path: str) -> str:
+        """Resolve o caminho do arquivo JSON, tentando .gz se nao encontrado."""
+        if os.path.isfile(path):
+            return path
+        gz_path = path + ".gz"
+        if os.path.isfile(gz_path):
+            return gz_path
+        raise DataLoadError(f"Arquivo JSON nao encontrado: {path}")
+
+    def _open_file(self, filepath: str, encoding: str = "utf-8"):
+        """Abre um arquivo, suportando .gz transparentemente."""
+        if filepath.endswith(".gz"):
+            return io.TextIOWrapper(gzip.open(filepath, "rb"), encoding=encoding)
+        return open(filepath, "r", encoding=encoding)
+
     def _read_json(self, path: str) -> list[dict]:
         """Le um arquivo JSON Lines (uma linha JSON por registro)."""
-        if not os.path.isfile(path):
-            raise DataLoadError(f"Arquivo JSON nao encontrado: {path}")
+        resolved = self._resolve_json_path(path)
 
         records: list[dict] = []
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with self._open_file(resolved) as f:
                 for line_number, line in enumerate(f, start=1):
                     stripped = line.strip()
                     if not stripped:
@@ -67,12 +83,12 @@ class DataIOManager:
                         records.append(json.loads(stripped))
                     except json.JSONDecodeError as e:
                         logger.warning(
-                            "Linha %d ignorada em %s: %s", line_number, path, e
+                            "Linha %d ignorada em %s: %s", line_number, resolved, e
                         )
         except OSError as e:
-            raise DataLoadError(f"Erro ao ler arquivo JSON {path}: {e}") from e
+            raise DataLoadError(f"Erro ao ler arquivo JSON {resolved}: {e}") from e
 
-        logger.info("Lidos %d registros de %s", len(records), path)
+        logger.info("Lidos %d registros de %s", len(records), resolved)
         return records
 
     def _read_csv(self, path: str, separator: str) -> list[dict]:
@@ -82,7 +98,10 @@ class DataIOManager:
         if os.path.isfile(path):
             files = [path]
         elif os.path.isdir(path):
-            files = sorted(glob.glob(os.path.join(path, "*.csv")))
+            files = sorted(
+                glob.glob(os.path.join(path, "*.csv"))
+                + glob.glob(os.path.join(path, "*.csv.gz"))
+            )
             if not files:
                 raise DataLoadError(
                     f"Nenhum arquivo CSV encontrado no diretorio: {path}"
@@ -92,7 +111,7 @@ class DataIOManager:
 
         for filepath in files:
             try:
-                with open(filepath, "r", encoding="utf-8") as f:
+                with self._open_file(filepath) as f:
                     reader = csv.DictReader(f, delimiter=separator)
                     for row in reader:
                         records.append(dict(row))
