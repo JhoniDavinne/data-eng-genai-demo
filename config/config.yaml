@@ -1,0 +1,20 @@
+spark:
+  app_name: "Top10ClientesPipeline"
+  master: "local[*]"
+
+catalogo:
+  clientes:
+    formato: "json"
+    caminho: "data/input/dataset-json-clientes/data/clientes.json"
+  pedidos:
+    formato: "csv"
+    caminho: "data/input/datasets-csv-pedidos/data/pedidos/"
+    opcoes:
+      header: "true"
+      sep: ";"
+      inferSchema: "true"
+
+saida:
+  top_10_clientes:
+    formato: "parquet"
+    caminho: "data/output/top_10_clientes"
