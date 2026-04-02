@@ -1,0 +1,20 @@
+datasets:
+  clientes_bronze:
+    type: json
+    path: ./data/input/dataset-json-clientes/data/clientes.json
+  pedidos_bronze:
+    type: csv
+    path: ./data/input/datasets-csv-pedidos/data/pedidos
+    separator: ";"
+  top_10_clientes:
+    type: csv
+    path: ./data/output/top_10_clientes
+    separator: ";"
+
+data_sources:
+  clientes:
+    repo: https://github.com/infobarbosa/dataset-json-clientes
+    dest: ./data/input/dataset-json-clientes
+  pedidos:
+    repo: https://github.com/infobarbosa/datasets-csv-pedidos
+    dest: ./data/input/datasets-csv-pedidos
