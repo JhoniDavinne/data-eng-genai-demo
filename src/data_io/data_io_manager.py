@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Any, Dict, Optional
 
 from pyspark.sql import DataFrame, SparkSession
@@ -29,8 +30,6 @@ class DataIOManager:
 
     def _resolver_caminho(self, caminho_relativo: str) -> str:
         """Resolve um caminho relativo à raiz do projeto."""
-        import os
-
         return os.path.join(self._raiz_projeto, caminho_relativo)
 
     def ler(self, dataset_id: str) -> DataFrame:
