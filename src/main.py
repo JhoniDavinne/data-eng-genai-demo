@@ -35,26 +35,10 @@ def main() -> None:
 
     # 1. Carregar configuração
     config = ConfigLoader()
-    project_root = config.project_root
 
-    # 2. Baixar datasets se necessário
-    datasets_to_clone = [
-        {
-            "url": "https://github.com/infobarbosa/dataset-json-clientes",
-            "target": os.path.join(
-                project_root, "data", "input", "dataset-json-clientes"
-            ),
-        },
-        {
-            "url": "https://github.com/infobarbosa/datasets-csv-pedidos",
-            "target": os.path.join(
-                project_root, "data", "input", "datasets-csv-pedidos"
-            ),
-        },
-    ]
-
-    for ds in datasets_to_clone:
-        clone_dataset_if_needed(ds["url"], ds["target"])
+    # 2. Baixar datasets se necessário (URLs lidas do config.yaml)
+    for source in config.get_dataset_sources():
+        clone_dataset_if_needed(source["url"], source["target"])
 
     # 3. Instanciar componentes (Injeção de Dependência)
     data_io = DataIOManager(config)

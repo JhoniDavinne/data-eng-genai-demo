@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import yaml
 
@@ -65,3 +65,17 @@ class ConfigLoader:
     def get_pipeline_param(self, param: str, default: Any = None) -> Any:
         """Retorna um parâmetro do pipeline."""
         return self._config.get("pipeline", {}).get(param, default)
+
+    def get_dataset_sources(self) -> List[Dict[str, str]]:
+        """Retorna a lista de sources (url + target absoluto) dos datasets."""
+        sources = []
+        for ds_config in self._config.get("datasets", {}).values():
+            source = ds_config.get("source")
+            if source:
+                sources.append(
+                    {
+                        "url": source["url"],
+                        "target": os.path.join(self._project_root, source["target"]),
+                    }
+                )
+        return sources
